@@ -1,6 +1,6 @@
 name: dragablegridview_flutter
 description: A dragable gridview,GridView reordering after dragging
-version: 0.0.2
+version: 0.0.4
 author: baoolong <baoolong1987@gmail.com>
 homepage: https://github.com/baoolong/DragableGridview
 

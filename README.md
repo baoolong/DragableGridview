@@ -1,4 +1,4 @@
-# marquee
+# DragableGridview
 [![pub package](https://img.shields.io/pub/v/dragablegridview_flutter.svg)](https://pub.dartlang.org/packages/dragablegridview_flutter)
 
 用GridView编写的可拖动排序View，可任意拖动位置
@@ -16,7 +16,7 @@ MoreWidght：[https://github.com/OpenFlutter/PullToRefresh](https://github.com/O
 Add this to your package's pubspec.yaml file:
 
 	dependencies:
-	  dragablegridview_flutter: ^0.0.2
+	  dragablegridview_flutter: ^0.0.4
 	  
 Add it to your dart file:
 
