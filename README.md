@@ -1,9 +1,9 @@
 # DragableGridview
 [![pub package](https://img.shields.io/pub/v/dragablegridview_flutter.svg)](https://pub.dartlang.org/packages/dragablegridview_flutter)
 
-用GridView编写的可拖动排序View，可任意拖动位置
+用GridView编写的可拖动排序View，可任意拖动位置.长按触发拖动，拖动到其他Item上时触发动画，为被拖动的Item腾出空间。松开手指重新排序
 
-A dragable gridview for sorting ，GridView reordering after dragging
+A dragable gridview,Long-pressed triggers draggable state,When  dragging until covere other items, other Items trigger the animation to make room for the draggable Item,GridView reordering after release your finger
 
 HomePage：[https://github.com/baoolong/DragableGridview](https://github.com/baoolong/DragableGridview)
 
@@ -16,7 +16,7 @@ MoreWidght：[https://github.com/OpenFlutter/PullToRefresh](https://github.com/O
 Add this to your package's pubspec.yaml file:
 
 	dependencies:
-	  dragablegridview_flutter: ^0.0.4
+	  dragablegridview_flutter: ^0.1.1
 	  
 Add it to your dart file:
 
