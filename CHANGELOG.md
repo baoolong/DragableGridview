@@ -1,4 +1,8 @@
-## [0.0.4] - 2018.10.15
+## [0.1.3] - 2019.01.23
+
+*    Add delete item function
+
+## [0.1.1] - 2018.10.15
 
 *    Add a detailed description
 *    Upgrade version to above 0.1
