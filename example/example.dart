@@ -9,7 +9,6 @@ class DragAbleGridViewDemo extends StatefulWidget{
   State<StatefulWidget> createState() {
     return new DragAbleGridViewDemoState();
   }
-
 }
 
 class DragAbleGridViewDemoState extends State<DragAbleGridViewDemo>{

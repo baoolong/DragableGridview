@@ -1,5 +1,3 @@
-library dragablegridview;
-
 import 'dart:async';
 
 import 'package:dragablegridview_flutter/dragablegridviewbin.dart';
@@ -13,18 +11,26 @@ class DragAbleGridView <T extends DragAbleGridViewBin> extends StatefulWidget{
 
   final CreateChild child;
   final List<T> itemBins;
+  ///GridView一行显示几个child
   final int crossAxisCount;
   ///为了便于计算 Item之间的空隙都用crossAxisSpacing
   final double crossAxisSpacing;
   final double mainAxisSpacing;
   //cross-axis to the main-axis
   final double childAspectRatio;
+  ///child的pading
   final EdgeInsets itemPadding;
+  ///GridView的child的装饰 如边框
   final Decoration decoration;
+  ///删除图标的大小
   final double deleteIconSize;
+  ///删除图标margin top  和 margin right 的值，因为不设置的话，图标位置感觉不太对
   final double deleteIconMarginTopAndRight;
+  ///删除图标的name 例如 images/close.png
   final String deleteIconName;
+  ///编辑开关控制器，可通过点击按钮触发编辑
   final EditSwitchController editSwitchController;
+  ///长按触发编辑状态，可监听状态来改变编辑按钮（编辑开关 ，通过按钮触发编辑）的状态
   final EditChangeListener editChangeListener;
 
 
@@ -58,33 +64,28 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
   var physics=new ScrollPhysics();
   double screenWidth;
   double screenHeight;
-  //在拖动过程中Item position 的位置记录
+  ///在拖动过程中Item position 的位置记录
   List<int> itemPositions;
-
-  //下面4个变量具体看onTapDown（）方法里面的代码，有具体的备注
+  ///下面4个变量具体看onTapDown（）方法里面的代码，有具体的备注
   double itemWidth;
   double itemHeight;
-
   double itemWidthChild;
   double itemHeightChild;
-
-  //下面2个变量具体看onTapDown（）方法里面的代码，有具体的备注
-  double theMarginsOfParentWid;
-  double theMarginsOfParentHei;
+  ///下面2个变量具体看onTapDown（）方法里面的代码，有具体的备注
+  double blankSpaceHorizontal;
+  double blankSpaceVertical;
 
   Animation<double> animation;
   AnimationController controller;
-
   int startPosition;
   int endPosition;
-
   bool isRest=false;
-
-  double areaCoverageRatio=2/5;
-
+  ///覆盖超过1/5则触发动画，宽和高只要有一个满足就可以触发
+  //double areaCoverageRatio=1/5;
   Timer timer;
   bool isRemoveItem=false;
   bool isHideDeleteIcon=true;
+  Future _future;
 
 
   @override
@@ -95,50 +96,67 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
     controller = new AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     animation = new Tween(begin:0.0,end: 1.0).animate(controller)
       ..addListener(() {
+        T offsetBin;
+        int childWidgetPosition;
+
         if(isRest){
           if(startPosition>endPosition){
             for(int i=endPosition; i<startPosition;i++){
+              childWidgetPosition=itemPositions[i];
+              offsetBin=widget.itemBins[childWidgetPosition];
               //图标向右 下移动
               if((i+1)%widget.crossAxisCount==0){
-                widget.itemBins[itemPositions[i]].lastTimePositionX = -(screenWidth-itemWidth ) * 1+widget.itemBins[itemPositions[i]].lastTimePositionX;
-                widget.itemBins[itemPositions[i]].lastTimePositionY = (itemHeight + widget.mainAxisSpacing) * 1+widget.itemBins[itemPositions[i]].lastTimePositionY ;
+                offsetBin.lastTimePositionX = -(screenWidth-itemWidth ) * 1+offsetBin.lastTimePositionX;
+                offsetBin.lastTimePositionY = (itemHeight + widget.mainAxisSpacing) * 1+offsetBin.lastTimePositionY ;
               }else {
-                widget.itemBins[itemPositions[i]].lastTimePositionX = (itemWidth + widget.crossAxisSpacing) * 1+widget.itemBins[itemPositions[i]].lastTimePositionX ;
+                offsetBin.lastTimePositionX = (itemWidth + widget.crossAxisSpacing) * 1+offsetBin.lastTimePositionX ;
               }
             }
           }else{
             for(int i=startPosition+1;i<=endPosition;i++){
+              childWidgetPosition=itemPositions[i];
+              offsetBin=widget.itemBins[childWidgetPosition];
               //图标向左 上移动
               if(i%widget.crossAxisCount==0){
-                widget.itemBins[itemPositions[i]].lastTimePositionX = (screenWidth-itemWidth ) * 1+widget.itemBins[itemPositions[i]].lastTimePositionX;
-                widget.itemBins[itemPositions[i]].lastTimePositionY = -(itemHeight + widget.mainAxisSpacing) * 1+widget.itemBins[itemPositions[i]].lastTimePositionY;
+                offsetBin.lastTimePositionX = (screenWidth-itemWidth ) * 1+offsetBin.lastTimePositionX;
+                offsetBin.lastTimePositionY = -(itemHeight + widget.mainAxisSpacing) * 1+offsetBin.lastTimePositionY;
               }else{
-                widget.itemBins[itemPositions[i]].lastTimePositionX = -(itemWidth + widget.crossAxisSpacing) * 1+widget.itemBins[itemPositions[i]].lastTimePositionX;
+                offsetBin.lastTimePositionX = -(itemWidth + widget.crossAxisSpacing) * 1+offsetBin.lastTimePositionX;
               }
             }
           }
           return;
         }
-        setState(() {
 
+        //此代码和上面的代码一样，但是不能提成方法调用 ，已经测试调用方法不会生效
+        setState(() {
+          //startPosition大于endPosition表明目标位置在上方，图标需要向后退一格
           if(startPosition>endPosition){
             for(int i=endPosition; i<startPosition;i++){
-              //图标向右 下移动
+              childWidgetPosition=itemPositions[i];
+              offsetBin=widget.itemBins[childWidgetPosition];
+              //图标向左 下移动；如果图标处在最右侧，那需要向下移动一层，移动到下一层的最左侧，（开头的地方）
               if((i+1)%widget.crossAxisCount==0){
-                widget.itemBins[itemPositions[i]].dragPointX = -(screenWidth-itemWidth ) * animation.value+widget.itemBins[itemPositions[i]].lastTimePositionX;
-                widget.itemBins[itemPositions[i]].dragPointY = (itemHeight + widget.mainAxisSpacing) * animation.value+widget.itemBins[itemPositions[i]].lastTimePositionY ;
+                offsetBin.dragPointX = -(screenWidth-itemWidth ) * animation.value+offsetBin.lastTimePositionX;
+                offsetBin.dragPointY = (itemHeight + widget.mainAxisSpacing) * animation.value+offsetBin.lastTimePositionY ;
               }else {
-                widget.itemBins[itemPositions[i]].dragPointX = (itemWidth + widget.crossAxisSpacing) * animation.value+widget.itemBins[itemPositions[i]].lastTimePositionX ;
+                //↑↑↑如果图标不是处在最右侧，只需要向右移动即可
+                offsetBin.dragPointX = (itemWidth + widget.crossAxisSpacing) * animation.value+offsetBin.lastTimePositionX ;
               }
             }
-          }else{
+          }
+          //当目标位置在下方时 ，图标需要向前前进一个
+          else{
             for(int i=startPosition+1;i<=endPosition;i++){
-              //图标向左 上移动
+              childWidgetPosition=itemPositions[i];
+              offsetBin=widget.itemBins[childWidgetPosition];
+              //图标向右 上移动；如果图标处在最左侧，那需要向上移动一层
               if(i%widget.crossAxisCount==0){
-                widget.itemBins[itemPositions[i]].dragPointX = (screenWidth-itemWidth ) * animation.value+widget.itemBins[itemPositions[i]].lastTimePositionX;
-                widget.itemBins[itemPositions[i]].dragPointY = -(itemHeight + widget.mainAxisSpacing) * animation.value+widget.itemBins[itemPositions[i]].lastTimePositionY;
+                offsetBin.dragPointX = (screenWidth-itemWidth ) * animation.value+offsetBin.lastTimePositionX;
+                offsetBin.dragPointY = -(itemHeight + widget.mainAxisSpacing) * animation.value+offsetBin.lastTimePositionY;
               }else{
-                widget.itemBins[itemPositions[i]].dragPointX = -(itemWidth + widget.crossAxisSpacing) * animation.value+widget.itemBins[itemPositions[i]].lastTimePositionX;
+                //↑↑↑如果图标不是处在最左侧，只需要向左移动即可
+                offsetBin.dragPointX = -(itemWidth + widget.crossAxisSpacing) * animation.value+offsetBin.lastTimePositionX;
               }
             }
           }
@@ -166,7 +184,6 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
 
       }
     });
-
     _initItemPositions();
   }
 
@@ -178,6 +195,45 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
   }
 
 
+  void animationHandle(double value){
+    T offsetBin;//offset
+    int childWidgetPosition;
+
+    //setState(() {
+    //startPosition大于endPosition表明目标位置在上方，图标需要向后退一格
+    if(startPosition>endPosition){
+      for(int i=endPosition; i<startPosition;i++){
+        childWidgetPosition=itemPositions[i];
+        offsetBin=widget.itemBins[childWidgetPosition];
+        //图标向左 下移动；如果图标处在最右侧，那需要向下移动一层，移动到下一层的最左侧，（开头的地方）
+        if((i+1)%widget.crossAxisCount==0){
+          offsetBin.dragPointX = -(screenWidth-itemWidth ) * value + offsetBin.lastTimePositionX;
+          offsetBin.dragPointY = (itemHeight + widget.mainAxisSpacing) * value + offsetBin.lastTimePositionY ;
+        }else {
+          //↑↑↑如果图标不是处在最右侧，只需要向右移动即可
+          offsetBin.dragPointX = (itemWidth + widget.crossAxisSpacing) * value + offsetBin.lastTimePositionX ;
+        }
+      }
+    }
+    //当目标位置在下方时 ，图标需要向前前进一个
+    else{
+      for(int i=startPosition+1;i<=endPosition;i++){
+        childWidgetPosition=itemPositions[i];
+        offsetBin=widget.itemBins[childWidgetPosition];
+        //图标向右 上移动；如果图标处在最左侧，那需要向上移动一层
+        if(i%widget.crossAxisCount==0){
+          offsetBin.dragPointX = (screenWidth-itemWidth ) * value + offsetBin.lastTimePositionX;
+          offsetBin.dragPointY = -(itemHeight + widget.mainAxisSpacing) * value + offsetBin.lastTimePositionY;
+        }else{
+          //↑↑↑如果图标不是处在最左侧，只需要向左移动即可
+          offsetBin.dragPointX = -(itemWidth + widget.crossAxisSpacing) * value + offsetBin.lastTimePositionX;
+        }
+      }
+    }
+    //});
+  }
+
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -186,6 +242,8 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
     screenHeight=screenSize.height;
   }
 
+
+  ///自定义长按事件，只有长按800毫秒 才能触发拖动
   void _handLongPress(int index) async{
     await Future.delayed(new Duration(milliseconds: 800));
     if(widget.itemBins[index].isLongPress){
@@ -196,7 +254,6 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
           widget.editChangeListener();
         }
         isHideDeleteIcon=false;
-
       });
     }
   }
@@ -211,7 +268,12 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
             physics: physics,
             scrollDirection: Axis.vertical,
             itemCount: widget.itemBins.length,
-            gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: widget.crossAxisCount,childAspectRatio: widget.childAspectRatio,crossAxisSpacing: widget.crossAxisSpacing,mainAxisSpacing: widget.mainAxisSpacing),
+            gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: widget.crossAxisCount,
+                childAspectRatio: widget.childAspectRatio,
+                crossAxisSpacing: widget.crossAxisSpacing,
+                mainAxisSpacing: widget.mainAxisSpacing
+            ),
             itemBuilder: (BuildContext contexts,int index){
               return new GestureDetector(
                 onTapDown: (detail){
@@ -224,7 +286,7 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
                   handleOnPanEndEvent(index);
                 },
                 onTapUp: (tapUpDetails){
-                  widget.itemBins[index].isLongPress=false;
+                  handleOnTapUp(index);
                 },
                 child:new Offstage(
                   offstage: widget.itemBins[index].offstage,
@@ -265,7 +327,7 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
                                       });
                                       startPosition=index;
                                       endPosition=widget.itemBins.length-1;
-                                      getWidgetsSize(index);
+                                      getWidgetsSize(widget.itemBins[index]);
                                       isRemoveItem=true;
                                       _future=controller.forward();
                                     },
@@ -285,21 +347,37 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
 
 
   void handleOnPanEndEvent(int index){
-    widget.itemBins[index].isLongPress=false;
-    if(!widget.itemBins[index].dragAble) {
-      widget.itemBins[index].dragPointY = 0.0;
-      widget.itemBins[index].dragPointX = 0.0;
+    T pressItemBin = widget.itemBins[index];
+
+    pressItemBin.isLongPress=false;
+    if(!pressItemBin.dragAble) {
+      pressItemBin.dragPointY = 0.0;
+      pressItemBin.dragPointX = 0.0;
     }else {
       onPanEndEvent(index);
     }
   }
 
 
+  void handleOnTapUp(int index){
+    T pressItemBin = widget.itemBins[index];
+
+    pressItemBin.isLongPress=false;
+    if(!isHideDeleteIcon) {
+      //计算手指点下去后，控件应该偏移多少像素
+      pressItemBin.dragPointY = 0.0;
+      pressItemBin.dragPointX = 0.0;
+    }
+  }
+
+
   void handleOnPanUpdateEvent(int index,DragUpdateDetails updateDetail){
-    widget.itemBins[index].isLongPress=false;
-    if(widget.itemBins[index].dragAble) {
-      double dragPointY=widget.itemBins[index].dragPointY += updateDetail.delta.dy;
-      double dragPointX=widget.itemBins[index].dragPointX += updateDetail.delta.dx;
+    T pressItemBin = widget.itemBins[index];
+
+    pressItemBin.isLongPress=false;
+    if(pressItemBin.dragAble) {
+      double dragPointY=pressItemBin.dragPointY += updateDetail.delta.dy;
+      double dragPointX=pressItemBin.dragPointX += updateDetail.delta.dx;
       if(timer!=null&&timer.isActive){
         timer.cancel();
       }
@@ -316,220 +394,255 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
 
 
   void handleOnTapDownEvent(int index,TapDownDetails detail){
-    getWidgetsSize(index);
+    T pressItemBin = widget.itemBins[index];
+
+    getWidgetsSize(pressItemBin);
 
     if(!isHideDeleteIcon) {
       //获取控件在屏幕中的y坐标
-      double ss = widget.itemBins[index].containerKey.currentContext
-          .findRenderObject()
-          .getTransformTo(null)
-          .getTranslation()
-          .y;
-      double aa = widget.itemBins[index].containerKey.currentContext
-          .findRenderObject()
-          .getTransformTo(null)
-          .getTranslation()
-          .x;
+      double ss = pressItemBin.containerKey.currentContext.findRenderObject().getTransformTo(null).getTranslation().y;
+      double aa = pressItemBin.containerKey.currentContext.findRenderObject().getTransformTo(null).getTranslation().x;
 
       //计算手指点下去后，控件应该偏移多少像素
-      widget.itemBins[index].dragPointY =
-          detail.globalPosition.dy - ss - itemHeight / 2;
-      widget.itemBins[index].dragPointX =
-          detail.globalPosition.dx - aa - itemWidth / 2;
+      pressItemBin.dragPointY = detail.globalPosition.dy - ss - itemHeight / 2;
+      pressItemBin.dragPointX = detail.globalPosition.dx - aa - itemWidth / 2;
     }
 
     //标识长按事件开始
-    widget.itemBins[index].isLongPress=true;
+    pressItemBin.isLongPress=true;
     //将可拖动标识置为false；（dragAble 为 true时 控件可拖动 ，暂时置为false  等达到长按时间才视为需要拖动）
-    widget.itemBins[index].dragAble=false;
+    pressItemBin.dragAble=false;
     endPosition=index;
     _handLongPress(index);
   }
 
 
-  void getWidgetsSize(int index){
+  void getWidgetsSize(T pressItemBin){
     //获取 不 带边框的Container的宽度
-    itemWidth=widget.itemBins[index].containerKey.currentContext.findRenderObject().paintBounds.size.width;
-    itemHeight=widget.itemBins[index].containerKey.currentContext.findRenderObject().paintBounds.size.height;
+    itemWidth=pressItemBin.containerKey.currentContext.findRenderObject().paintBounds.size.width;
+    itemHeight=pressItemBin.containerKey.currentContext.findRenderObject().paintBounds.size.height;
 
     //获取  带边框 的Container的宽度，就是可见的Item视图的宽度
-    itemWidthChild=widget.itemBins[index].containerKeyChild.currentContext.findRenderObject().paintBounds.size.width;
-    itemHeightChild=widget.itemBins[index].containerKeyChild.currentContext.findRenderObject().paintBounds.size.height;
+    itemWidthChild=pressItemBin.containerKeyChild.currentContext.findRenderObject().paintBounds.size.width;
+    itemHeightChild=pressItemBin.containerKeyChild.currentContext.findRenderObject().paintBounds.size.height;
 
     //获取 不带边框  和它的子View （带边框 的Container）左右两边的空白部分的宽度
-    theMarginsOfParentWid=(itemWidth-itemWidthChild)/2;
-    theMarginsOfParentHei=(itemHeight-itemHeightChild)/2;
+    blankSpaceHorizontal=(itemWidth-itemWidthChild)/2;
+    blankSpaceVertical=(itemHeight-itemHeightChild)/2;
   }
 
 
-  int onDragLessThanWidthX(int index,double dragPointX,bool isYDragable,DragUpdateDetails updateDetail){
-    int x=0;
+  int geyXTransferItemCount(int index,double xBlankPlace,double dragPointX){
 
-    int a=itemPositions.indexOf(index);
-    if((index==a||isYDragable)||(index!=a||!isYDragable)){
+    //最大边界 和 最小边界
+    //double maxBoundWidth = itemWidthChild * (1-areaCoverageRatio);
+    //double minBoundWidth = itemWidthChild * areaCoverageRatio;
+
+    //是否越过空白间隙，未越过则表示在原地，或覆盖自己原位置的一部分，未拖动到其他Item上，或者已经拖动过多次现在又拖回来了；越过则有多种情况
+    if(dragPointX.abs()>xBlankPlace){
+      if(dragPointX>0){
+        //↑↑↑表示移动到自己原位置的右手边
+        return checkXAxleRight(index,xBlankPlace,dragPointX);
+      }else{
+        //↑↑↑表示移动到自己原位置的左手边
+        return checkXAxleLeft(index,xBlankPlace,dragPointX);
+      }
+    }else{
+      //↑↑↑连一个空白的区域都未越过 肯定是呆在自己的原位置，返回index
       return 0;
     }
-    if (dragPointX < 0.0&&updateDetail.delta.dx>0.0) {
-      x=-1;
-    } else if(dragPointX > 0.0&&updateDetail.delta.dx<0.0){
-      x=1;
-    }
-    return x;
   }
 
-  int onDragMoreThanWidthX(int index,double xBlankPlace,double dragPointX){
-    int x;
-    if (dragPointX < 0.0) {
-      x=(dragPointX+xBlankPlace)~/(itemWidthChild+xBlankPlace);
-      x=x-1;
-    } else {
-      x=(dragPointX-xBlankPlace)~/(itemWidthChild+xBlankPlace);
-      x=x+1;
+  ///当被拖动到自己位置右侧时
+  int checkXAxleRight(int index,double xBlankPlace,double dragPointX){
+    double aSection=xBlankPlace+itemWidthChild;
+
+    double rightTransferDistance=dragPointX.abs()+itemWidthChild;
+    //计算左右边框的余数
+    double rightBorder=rightTransferDistance%aSection;
+    double leftBorder=dragPointX.abs()%aSection;
+
+    //与2个item有粘连时，计算占比多的就是要目标位置
+    if(rightBorder<itemWidthChild&&leftBorder<itemWidthChild){
+      if(itemWidthChild-leftBorder>rightBorder){
+        //left占比多，那左侧未将要动画的目标位置
+        return (dragPointX.abs()/aSection).floor();
+      }else{
+        //right占比多
+        return (rightTransferDistance/aSection).floor();
+      }
+
+    }else if (rightBorder>itemWidthChild&&leftBorder<itemWidthChild) {
+      //left粘连，右边的边框在空白区域
+      return (dragPointX.abs()/aSection).floor();
+    }else if (rightBorder<itemWidthChild&&leftBorder>itemWidthChild) {
+      //right粘连，左侧的边框在空白区域
+      return (rightTransferDistance/aSection).floor();
+    }else {
+      //左右两边均没有粘连时，说明左右两边处于空白区域，返回0即可
+      return 0;
     }
-    return x;
   }
 
-  int onDragLessThanWidthY(int index,double dragPointY,DragUpdateDetails updateDetail){
-    int y=index;
-    int a=itemPositions.indexOf(index);
-    if(index~/widget.crossAxisCount==a~/widget.crossAxisCount){
+  ///X轴方向上，当被拖动到自己位置左侧时
+  int checkXAxleLeft(int index,double xBlankPlace,double dragPointX){
+    double aSection=xBlankPlace+itemWidthChild;
+
+    double leftTransferDistance=dragPointX.abs()+itemWidthChild;
+
+    //计算左右边框的余数
+    double leftBorder=leftTransferDistance%aSection;
+    double rightBorder=dragPointX.abs()%aSection;
+
+    //与2个item有粘连时，计算占比多的就是要目标位置
+    if(rightBorder<itemWidthChild&&leftBorder<itemWidthChild){
+      if(itemWidthChild-rightBorder>leftBorder){
+        //right占比多，那右侧为将要动画的目标位置
+        return -(dragPointX.abs()/aSection).floor();
+      }else{
+        //left占比多
+        return -(leftTransferDistance/aSection).floor();
+      }
+
+    }else if (rightBorder>itemWidthChild&&leftBorder<itemWidthChild) {
+      //left粘连，右边的边框在空白区域
+      return -(leftTransferDistance/aSection).floor();
+
+    }else if (rightBorder<itemWidthChild&&leftBorder>itemWidthChild) {
+      //right粘连，左侧的边框在空白区域
+      return -(dragPointX.abs()/aSection).floor();
+
+    }else {
+      //左右两边均没有粘连时，说明左右两边处于空白区域，返回0即可
+      return 0;
+    }
+  }
+
+
+
+  ///计算Y轴方向需要移动几个Item
+  /// 1. 目标拖动距离拖动不满足， 2. 拖动到其他Item的，3. 和任何Item都没有粘连，5.和多个item有重叠 等4种情况
+  /// 还要考虑一点就是 虽然Y轴不满足1/5--4/5覆盖率，但是X轴满足
+  int geyYTransferItemCount(int index,double yBlankPlace,double dragPointY){
+
+    //最大边界 和 最小边界
+    //double maxBoundHeight = itemHeightChild * (1-areaCoverageRatio);
+    //double minBoundHeight = itemHeightChild * areaCoverageRatio;
+
+    //上下边框是否都满足 覆盖1/5--4/5高度的要求
+    //bool isTopBoundLegitimate = topBorder > minBoundHeight && topBorder < maxBoundHeight;
+    //bool isBottomBoundLegitimate = bottomBorder > minBoundHeight && bottomBorder < maxBoundHeight;
+
+    //是否越过空白间隙，未越过则表示在原地，或覆盖自己原位置的一部分，未拖动到其他Item上，或者已经拖动过多次现在又拖回来了；越过则有多种情况
+    if(dragPointY.abs()>yBlankPlace){
+      //↑↑↑越过则有多种情况↓↓↓
+      if(dragPointY>0){
+        //↑↑↑表示拖动的Item现在处于原位置之下
+        return checkYAxleBelow(index,yBlankPlace,dragPointY);
+      }else{
+        //↑↑↑表示拖动的Item现在处于原位置之上
+        return checkYAxleAbove(index,yBlankPlace,dragPointY);
+      }
+    }else{
+      //↑↑↑未越过 返回index
       return index;
     }
-    if(dragPointY<0.0&&updateDetail.delta.dy>0.0){
-      y=index-widget.crossAxisCount;
-    }else if(dragPointY>0.0&&updateDetail.delta.dy<0.0){
-      y=index+widget.crossAxisCount;
-    }
-    return y;
-  }
-
-  int onDragMoreThanWidthY(int index,double yBlankPlace,double dragPointY){
-    int y;
-    if(dragPointY<0.0){
-      y=index+(dragPointY+yBlankPlace)~/(itemHeightChild+yBlankPlace)*widget.crossAxisCount;
-      y=y-widget.crossAxisCount;
-    }else{
-      y=index+(dragPointY-yBlankPlace)~/(itemHeightChild+yBlankPlace)*widget.crossAxisCount;
-      y=y+widget.crossAxisCount;
-    }
-    return y;
   }
 
 
-  /// 修正参考大纲：1. 目标拖动距离拖动不满足，2. 拖动到相邻Item 3. 拖动到其他Item的，4. 已经拖动过几次，自己的原位置已经有Item，
-  /// 四种情况
-  void onFingerPause(int index,double dragPointX,double dragPointY,DragUpdateDetails updateDetail) async{
-    double xBlankPlace=theMarginsOfParentWid*2+widget.crossAxisSpacing;
-    double yBlankPlace=theMarginsOfParentHei*2+widget.mainAxisSpacing;
+  ///Y轴上当被拖动到原位置之上时，计算拖动了几行
+  int checkYAxleAbove(int index,double yBlankPlace,double dragPointY){
+    double aSection=yBlankPlace+itemHeightChild;
 
-    double xMaxCoverageArea=itemWidthChild*(1-areaCoverageRatio)+itemWidthChild;
-    double xMinCoverageArea=itemWidthChild*areaCoverageRatio;
-    double yMaxCoverageArea=itemHeightChild*(1-areaCoverageRatio)+itemHeightChild;
-    double yMinCoverageArea=itemHeightChild*areaCoverageRatio;
+    double topTransferDistance=dragPointY.abs()+itemHeightChild;
 
-    ////X轴的距离至少被拖动到相邻Item上时
-    bool xAtLeastToAdjacentItem=dragPointX.abs()>xBlankPlace;
-    bool yAtLeastToAdjacentItem=dragPointY.abs()>yBlankPlace;
+    //求下边框的余数，余数小于itemHeightChild，表示和下面的item覆盖，余数大于itemHeightChild，表示下边框处于空白的区域
+    double topBorder = (topTransferDistance)%aSection;
+    //求上边框的余数 ，余数小于itemHeightChild，表示和上面的Item覆盖 ，余数大于itemHeightChild，表示上边框处于空白区域
+    double bottomBorder = dragPointY.abs()%aSection;
 
-    //X轴的拖动距离大于1/3Width 且小于2/3Width
-    bool xTransferAbleIfLessThanW=dragPointX.abs()>xMinCoverageArea
-        &&dragPointX.abs()<xMaxCoverageArea;
-    bool yTransferAbleIfLessThanH=dragPointY.abs()>yMinCoverageArea
-        &&dragPointY.abs()<yMaxCoverageArea;
-
-    //X轴的距离至少被拖动到相邻Item上时，并求得是否在某个Item上
-    bool xTransferAbleIfMoreThanW=xAtLeastToAdjacentItem
-        &&(dragPointX.abs()-xBlankPlace)%(itemWidthChild+xBlankPlace)>xMinCoverageArea
-        &&(dragPointX.abs()-xBlankPlace)%(itemWidthChild+xBlankPlace)<xMaxCoverageArea;
-    bool yTransferAbleIfMoreThanH=yAtLeastToAdjacentItem
-        &&(dragPointY.abs()-yBlankPlace)%(itemHeightChild+yBlankPlace)>yMinCoverageArea
-        &&(dragPointY.abs()-yBlankPlace)%(itemHeightChild+yBlankPlace)<yMaxCoverageArea;
-
-    if(xTransferAbleIfLessThanW||yTransferAbleIfLessThanH||xTransferAbleIfMoreThanW||yTransferAbleIfMoreThanH){
-      int y=0;
-      int x=0;
-
-      //Y轴的距离至少被拖动到相邻Item上时，Y轴的拖动距离大于1/3Height 且小于2/3Height
-      if(yTransferAbleIfLessThanH&&yAtLeastToAdjacentItem){
-        //dragPointY>0 item被拖动到自己位置的下侧
-        if(dragPointY>0){
-          if(updateDetail.delta.dy>0){
-            //向下滑
-            y=onDragMoreThanWidthY(index,yBlankPlace,dragPointY);
-          }else{
-            //向上滑
-            y=onDragLessThanWidthY(index,dragPointY,updateDetail);
-          }
-        }else{
-          //item在上侧
-          if(updateDetail.delta.dy>0){
-            //向下滑
-            y=onDragLessThanWidthY(index,dragPointY,updateDetail);
-          }else{
-            //向上滑
-            y=onDragMoreThanWidthY(index,yBlankPlace,dragPointY);
-          }
-        }
-      }else if(yTransferAbleIfLessThanH){
-        y=onDragLessThanWidthY(index,dragPointY,updateDetail);
-      }else if(yTransferAbleIfMoreThanH){
-        y=onDragMoreThanWidthY(index,yBlankPlace,dragPointY);
-      }else if(yAtLeastToAdjacentItem
-          &&((dragPointY.abs()-yBlankPlace)%(itemHeightChild+yBlankPlace)<yMinCoverageArea
-              ||(dragPointY.abs()-yBlankPlace)%(itemHeightChild+yBlankPlace)>yMaxCoverageArea)){
-        //TODO 还有一种情况就是 ，X轴可移动，Y轴不可移动(Y轴小于1/5的高度，或大于4/5的高度)，但是Y轴有高度，这时要将Y轴的高度算上
-        y=onDragMoreThanWidthY(index,yBlankPlace,dragPointY);
+    if(topBorder<itemHeightChild&&bottomBorder<itemHeightChild){
+      //↑↑↑同时和2和item覆盖（上下边框均在覆盖区域）
+      if(itemHeightChild-bottomBorder>topBorder){
+        //↑↑↑粘连2个  要计算哪个占比多,topBorder越小 覆盖面积越大  ，bottomBorder越大  覆盖面积越大;
+        //下边框占比叫较大
+        return index-(dragPointY.abs()/aSection).floor()*widget.crossAxisCount;
       }else{
-        //要考虑到一种情况，就是只有X轴可移动，Y轴不可移动，这时
-        y=index;
+        //↑↑↑上边框占比大
+        return index-(topTransferDistance/aSection).floor()*widget.crossAxisCount;
       }
+    }else if(topBorder>itemHeightChild&&bottomBorder<itemHeightChild){
+      //↑↑↑下边框在覆盖区,上边框在空白区域。
+      return index-(dragPointY.abs()/aSection).floor()*widget.crossAxisCount;
 
+    }else if(topBorder<itemHeightChild&&bottomBorder>itemHeightChild){
+      //↑↑↑上边框在覆盖区域,下边框在空白区域
+      return index-(topTransferDistance/aSection).floor()*widget.crossAxisCount;
 
-      if(xTransferAbleIfLessThanW&&xAtLeastToAdjacentItem){
-        //这里要判断最后一次是滑向哪个方向,先根据dragPointX判断是在左边还是右边，再根据delta.dx判断是左滑还是右滑
-        if(dragPointX>0){
-          //item在右侧
-          if(updateDetail.delta.dx>0){
-            //向右滑
-            x=onDragMoreThanWidthX(index,xBlankPlace,dragPointX);
-          }else{
-            //向左滑
-            x=onDragLessThanWidthX(index,dragPointX,yTransferAbleIfLessThanH||yTransferAbleIfMoreThanH,updateDetail);
-          }
-        }else{
-          //item在左侧
-          if(updateDetail.delta.dx>0){
-            //向右滑
-            x=onDragLessThanWidthX(index,dragPointX,yTransferAbleIfLessThanH||yTransferAbleIfMoreThanH,updateDetail);
-          }else{
-            //向左滑
-            x=onDragMoreThanWidthX(index,xBlankPlace,dragPointX);
-          }
-        }
-      }else if(xTransferAbleIfLessThanW){
-        x=onDragLessThanWidthX(index,dragPointX,yTransferAbleIfLessThanH||yTransferAbleIfMoreThanH,updateDetail);
-      }else if(xTransferAbleIfMoreThanW){
-        x=onDragMoreThanWidthX(index,xBlankPlace,dragPointX);
-      }else if(xAtLeastToAdjacentItem&&
-          ((dragPointX.abs()-xBlankPlace)%(itemWidthChild+xBlankPlace)>xMinCoverageArea
-              ||(dragPointX.abs()-xBlankPlace)%(itemWidthChild+xBlankPlace)<xMaxCoverageArea)){
-        //TODO 还有一种情况就是 ，X轴不可移动(X轴小于1/5的宽度，或大于4/5的宽度)，Y轴可移动，但是X轴有宽度，这时要将X轴的宽度算上
-        x=onDragMoreThanWidthX(index,xBlankPlace,dragPointX);
-      }
-
-      //2.动画正在进行时不能进行动画 3. 计算错误时，终点坐标小于或者大于itemBins.length时不能动画
-      if(endPosition!=x+y
-          &&!controller.isAnimating
-          &&x+y<widget.itemBins.length
-          &&x+y>=0
-          &&widget.itemBins[index].dragAble){
-        endPosition=x+y;
-        _future=controller.forward();
-      }
+    }else{
+      //和哪个Item都没有覆盖，上下边框都在空白的区域。返回Index即可
+      return index;
     }
   }
 
-  Future _future;
+  /// 还要考虑一点就是 虽然Y轴不满足1/5--4/5覆盖率，但是X轴满足，所以返回的时候同时返回目标index 和 是否满足Y的覆盖条件
+  int checkYAxleBelow(int index,double yBlankPlace,double dragPointY){
+    double aSection=yBlankPlace+itemHeightChild;
+
+    double bottomTransferDistance=dragPointY.abs()+itemHeightChild;
+
+    //求下边框的余数，余数小于itemHeightChild，表示和下面的item覆盖，余数大于itemHeightChild，表示下边框处于空白的区域
+    double bottomBorder = bottomTransferDistance%aSection;
+    //求上边框的余数 ，余数小于itemHeightChild，表示和上面的Item覆盖 ，余数大于itemHeightChild，表示上边框处于空白区域
+    double topBorder = dragPointY.abs()%aSection;
+
+    if(bottomBorder<itemHeightChild && topBorder<itemHeightChild){
+      //↑↑↑同时和2和item覆盖（上下边框均在覆盖区域）
+      if(itemHeightChild-topBorder>bottomBorder){
+        //↑↑↑粘连2个  要计算哪个占比多,topBorder越小 覆盖面积越大  ，bottomBorder越大  覆盖面积越大;
+        //↑↑↑上面占比大
+        return index + (dragPointY.abs()/aSection).floor()*widget.crossAxisCount;
+
+      }else{
+        //↑↑↑下面占比大
+        return index + (bottomTransferDistance/aSection).floor()*widget.crossAxisCount;
+      }
+    }else if(topBorder>itemHeightChild&&bottomBorder<itemHeightChild){
+      //↑↑↑下边框在覆盖区 , 上边框在空白区域
+      return index + (bottomTransferDistance/aSection).floor()*widget.crossAxisCount;
+
+    }else if(topBorder<itemHeightChild&&bottomBorder>itemHeightChild){ //topBorder<itemHeightChild
+      //↑↑↑上边框在覆盖区域 ,下边框在空白区域
+      return index + (dragPointY.abs()/aSection).floor()*widget.crossAxisCount;
+
+    }else{
+      //↑↑↑和哪个Item都没有覆盖，上下边框都在空白的区域。返回Index即可
+      return index;
+    }
+  }
+
+
+  ///停止滑动时，处理是否需要动画等
+  void onFingerPause(int index,double dragPointX,double dragPointY,DragUpdateDetails updateDetail) async{
+
+    //边框和父布局之间的空白部分  +  gridView Item之间的space   +  相邻Item边框和父布局之间的空白部分
+    //所以 一个View和相邻View空白的部分计算如下 ，也就是说大于这个值 两个Item则能相遇叠加
+    double xBlankPlace=blankSpaceHorizontal*2+widget.crossAxisSpacing;
+    double yBlankPlace=blankSpaceVertical*2+widget.mainAxisSpacing;
+
+    int y=geyYTransferItemCount(index,yBlankPlace,dragPointY);
+    int x=geyXTransferItemCount(index,xBlankPlace,dragPointX);
+
+    //2.动画正在进行时不能进行动画 3. 计算错误时，终点坐标小于或者大于itemBins.length时不能动画
+    if(endPosition!=x+y
+        &&!controller.isAnimating
+        &&x+y<widget.itemBins.length
+        &&x+y>=0
+        &&widget.itemBins[index].dragAble){
+      endPosition=x+y;
+      _future=controller.forward();
+    }
+  }
 
   ///拖动结束后，根据 itemPositions 里面的排序，将itemBins重新排序
   ///并重新初始化 itemPositions
@@ -555,7 +668,6 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
     });
   }
 
-
   ///外部使用EditSwitchController控制编辑状态
   ///当调用该方法时 将GridView Item上的删除图标的状态取非 来改变状态
   void changeDeleteIconState(){
@@ -565,6 +677,8 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
   }
 }
 
+
+
 class EditSwitchController{
   DragAbleGridViewState dragAbleGridViewState;
 
@@ -572,3 +686,4 @@ class EditSwitchController{
     dragAbleGridViewState.changeDeleteIconState();
   }
 }
+

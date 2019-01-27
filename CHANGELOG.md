@@ -1,3 +1,7 @@
+## [0.1.4] - 2019.01.27
+
+*    Optimize code and fix bugs
+
 ## [0.1.3] - 2019.01.23
 
 *    Add delete item function
