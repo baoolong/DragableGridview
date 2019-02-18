@@ -1,3 +1,7 @@
+## [0.1.5] - 2019.02.18
+
+*    Dragable function is controllable, animation duration is controllable
+
 ## [0.1.4] - 2019.01.27
 
 *    Optimize code and fix bugs

@@ -1,9 +1,12 @@
 # DragableGridview
 [![pub package](https://img.shields.io/pub/v/dragablegridview_flutter.svg)](https://pub.dartlang.org/packages/dragablegridview_flutter)
 
-用GridView编写的可拖动排序View，可任意拖动位置.长按触发拖动，拖动到其他Item上时触发动画，为被拖动的Item腾出空间。松开手指重新排序
+用GridView编写的可拖动排序View，可任意拖动位置.长按触发拖动，松开手指重新排序，为满足大家的需求，现在增加了“删除动画” ；可能有的人只需要删除动画，而有的人却需要拖动动画，还有的人2个都需要，
+我们可以在代码里通过属性来控制使用哪个功能
 
-A dragable gridview,Long-pressed triggers draggable state,When  dragging until covere other items, other Items trigger the animation to make room for the draggable Item,GridView reordering after release your finger
+A dragable gridview,Long-pressed triggers draggable state,When  dragging until covere other items, other Items trigger the animation to make room for the draggable 
+Item,GridView reordering after release your finger，Now I have added "Delete Animation"; some people may only need  the delete animation, some people only need the drag
+ animation, and some people need it all. We can control the function by properties.
 
 HomePage：[https://github.com/baoolong/DragableGridview](https://github.com/baoolong/DragableGridview)
 
@@ -16,7 +19,7 @@ MoreWidght：[https://github.com/OpenFlutter/PullToRefresh](https://github.com/O
 Add this to your package's pubspec.yaml file:
 
 	dependencies:
-	  dragablegridview_flutter: ^0.1.4
+	  dragablegridview_flutter: ^0.1.5
 	  
 Add it to your dart file:
 
@@ -58,7 +61,6 @@ And GridView dataBin must extends DragAbleGridViewBin ,Add it to your dataBin fi
       State<StatefulWidget> createState() {
         return new DragAbleGridViewDemoState();
       }
-    
     }
     
     class DragAbleGridViewDemoState extends State<DragAbleGridViewDemo>{
@@ -68,26 +70,16 @@ And GridView dataBin must extends DragAbleGridViewBin ,Add it to your dataBin fi
       String actionTxtComplete="完成";
       String actionTxt;
       var editSwitchController=EditSwitchController();
+      final List<String> heroes=["鲁班","虞姬","甄姬","黄盖","张飞","关羽","刘备","曹操","赵云","孙策","庄周","廉颇","后裔","妲己","荆轲",];
     
       @override
       void initState() {
         super.initState();
         actionTxt=actionTxtEdit;
-        itemBins.add(new ItemBin("鲁班"));
-        itemBins.add(new ItemBin("虞姬"));
-        itemBins.add(new ItemBin("甄姬"));
-        itemBins.add(new ItemBin("黄盖"));
-        itemBins.add(new ItemBin("张飞"));
-        itemBins.add(new ItemBin("关羽"));
-        itemBins.add(new ItemBin("刘备"));
-        itemBins.add(new ItemBin("曹操"));
-        itemBins.add(new ItemBin("赵云"));
-        itemBins.add(new ItemBin("孙策"));
-        itemBins.add(new ItemBin("庄周"));
-        itemBins.add(new ItemBin("廉颇"));
-        itemBins.add(new ItemBin("后裔"));
-        itemBins.add(new ItemBin("妲己"));
-        itemBins.add(new ItemBin("荆轲"));
+        heroes.forEach((heroName) {
+            itemBins.add(new ItemBin(heroName));
+          }
+        );
       }
     
       @override
@@ -124,6 +116,11 @@ And GridView dataBin must extends DragAbleGridViewBin ,Add it to your dataBin fi
             crossAxisCount: 4,
             itemBins:itemBins,
             editSwitchController:editSwitchController,
+            /******************************new parameter*********************************/
+            isOpenDragAble: true,
+            animationDuration: 300, //milliseconds
+            longPressDuration: 800, //milliseconds
+            /******************************new parameter*********************************/
             child: (int position){
               return new Text(
                 itemBins[position].data,
@@ -149,9 +146,26 @@ And GridView dataBin must extends DragAbleGridViewBin ,Add it to your dataBin fi
       }
     }
 
-## Notice
+## Properties
 
-No Notice
+| properties         | type             | defaults             | description                       |
+| ----               | ----             | ----                 | ----                              |
+| child | typedef | @required | gridview's child at each position
+| itemBins | List<T> | @required | the data to be show by gridview's children
+| crossAxisCount | int | 4 | how many children to be show in a row ; 一行显示几个child
+| crossAxisSpacing | double | 1.0 | cross axis spacing ; 和滑动方向垂直的那个方向上 child之间的空隙
+| mainAxisSpacing | double | 0.0 | main axis spacing ; 滑动方向child之间的空隙
+| childAspectRatio | double | 0.0 | child aspect ratio ; child的纵横比
+| itemPadding | EdgeInsets | null | child的pading
+| decoration | Decoration | null | gridView child's decoration (because child is a Container) ; GridView的child的装饰（因为它的child是个Container）
+| deleteIconSize | double | 15.0 | the delete icon size ; 删除图标的大小
+| deleteIconMarginTopAndRight | double | 0.0 | the delete icon marginTop and marginRight values  ,if is't set, the location of delete icon will to be show incorrect ; 删除图标margin top  和 margin right 的值，因为不设置的话，图标位置感觉不太对
+| deleteIconName | string | null | delete icon name,example images/close.png ,Do not set this property if you do not use the delete function ; 删除图标的name 例如 images/close.png,如果不使用删除功能，不要设置此属性
+| editSwitchController | class | null | the switch controller that to trigger editing by clicking the button ; 编辑开关控制器，可通过点击按钮触发编辑
+| editChangeListener | typedef | null | when you long press to trigger the edit state, you can listener this state to change the state of the edit button ;	长按触发编辑状态，可监听状态来改变编辑按钮（编辑开关 ，通过按钮触发编辑）的状态
+| isOpenDragAble | bool | false | whether to enable the dragable function;是否启用拖动功能
+| animationDuration | int | 300 | animation duration;动画持续的时长
+| longPressDuration | int | 800 | long press duration;长按触发拖动的时长
 
 ## LICENSE
     MIT License
