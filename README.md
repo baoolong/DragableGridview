@@ -19,7 +19,7 @@ MoreWidght：[https://github.com/OpenFlutter/PullToRefresh](https://github.com/O
 Add this to your package's pubspec.yaml file:
 
 	dependencies:
-	  dragablegridview_flutter: ^0.1.5
+	  dragablegridview_flutter: ^0.1.6
 	  
 Add it to your dart file:
 
@@ -103,15 +103,8 @@ And GridView dataBin must extends DragAbleGridViewBin ,Add it to your dataBin fi
             ],
           ),
           body: new DragAbleGridView(
-            decoration: new BoxDecoration(
-              borderRadius: BorderRadius.all(new Radius.circular(3.0)),
-              border: new Border.all(color: Colors.blue),
-            ),
             mainAxisSpacing:10.0,
             crossAxisSpacing:10.0,
-            deleteIconName: "images/close.png",
-            deleteIconMarginTopAndRight: 6.0,
-            itemPadding: EdgeInsets.fromLTRB(8.0, 5.0, 8.0, 5.0),
             childAspectRatio:1.8,
             crossAxisCount: 4,
             itemBins:itemBins,
@@ -121,10 +114,21 @@ And GridView dataBin must extends DragAbleGridViewBin ,Add it to your dataBin fi
             animationDuration: 300, //milliseconds
             longPressDuration: 800, //milliseconds
             /******************************new parameter*********************************/
+            deleteIcon: new Image.asset("images/close.png",width: 15.0 ,height: 15.0 ),
             child: (int position){
-              return new Text(
-                itemBins[position].data,
-                style: new TextStyle(fontSize: 16.0,color: Colors.blue),);
+              return new Container(
+                padding: EdgeInsets.fromLTRB(8.0, 5.0, 8.0, 5.0),
+                decoration: new BoxDecoration(
+                  borderRadius: BorderRadius.all(new Radius.circular(3.0)),
+                  border: new Border.all(color: Colors.blue),
+                ),
+                //因为本布局和删除图标同处于一个Stack内，设置marginTop和marginRight能让图标处于合适的位置
+                //Because this layout and the delete_Icon are in the same Stack, setting marginTop and marginRight will make the icon in the proper position.
+                margin: EdgeInsets.only(top: 6.0,right: 6.0),
+                child: new Text(
+                  itemBins[position].data,
+                  style: new TextStyle(fontSize: 16.0,color: Colors.blue),),
+              );
             },
             editChangeListener: (){
               changeActionState();
@@ -156,16 +160,12 @@ And GridView dataBin must extends DragAbleGridViewBin ,Add it to your dataBin fi
 | crossAxisSpacing | double | 1.0 | cross axis spacing ; 和滑动方向垂直的那个方向上 child之间的空隙
 | mainAxisSpacing | double | 0.0 | main axis spacing ; 滑动方向child之间的空隙
 | childAspectRatio | double | 0.0 | child aspect ratio ; child的纵横比
-| itemPadding | EdgeInsets | null | child的pading
-| decoration | Decoration | null | gridView child's decoration (because child is a Container) ; GridView的child的装饰（因为它的child是个Container）
-| deleteIconSize | double | 15.0 | the delete icon size ; 删除图标的大小
-| deleteIconMarginTopAndRight | double | 0.0 | the delete icon marginTop and marginRight values  ,if is't set, the location of delete icon will to be show incorrect ; 删除图标margin top  和 margin right 的值，因为不设置的话，图标位置感觉不太对
-| deleteIconName | string | null | delete icon name,example images/close.png ,Do not set this property if you do not use the delete function ; 删除图标的name 例如 images/close.png,如果不使用删除功能，不要设置此属性
 | editSwitchController | class | null | the switch controller that to trigger editing by clicking the button ; 编辑开关控制器，可通过点击按钮触发编辑
 | editChangeListener | typedef | null | when you long press to trigger the edit state, you can listener this state to change the state of the edit button ;	长按触发编辑状态，可监听状态来改变编辑按钮（编辑开关 ，通过按钮触发编辑）的状态
 | isOpenDragAble | bool | false | whether to enable the dragable function;是否启用拖动功能
 | animationDuration | int | 300 | animation duration;动画持续的时长
 | longPressDuration | int | 800 | long press duration;长按触发拖动的时长
+| deleteIcon | Image | null | Delete button icon,Do not set this property if you do not use the delete function;删除按钮的图标，如果不使用删除功能，不要设置此属性
 
 ## LICENSE
     MIT License
