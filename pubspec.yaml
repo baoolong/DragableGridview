@@ -1,6 +1,6 @@
 name: dragablegridview_flutter
 description: A dragable gridview,Long-pressed triggers draggable state,GridView reordering after release your finger
-version: 0.1.7
+version: 0.1.8
 author: baoolong <baoolong1987@gmail.com>
 homepage: https://github.com/baoolong/DragableGridview
 

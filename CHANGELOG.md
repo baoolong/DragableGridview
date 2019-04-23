@@ -1,3 +1,7 @@
+## [0.1.8] - 2019.04.23
+
+*    Fix bug
+
 ## [0.1.7] - 2019.04.23
 
 *    Performance optimization

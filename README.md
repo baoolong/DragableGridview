@@ -3,10 +3,12 @@
 
 用GridView编写的可拖动排序View，可任意拖动位置.长按触发拖动，松开手指重新排序，为满足大家的需求，现在增加了“删除动画” ；可能有的人只需要删除动画，而有的人却需要拖动动画，还有的人2个都需要，
 我们可以在代码里通过属性来控制使用哪个功能
+请不要在拖动的时候更新增加或者删除的数据
 
 A dragable gridview,Long-pressed triggers draggable state,When  dragging until covere other items, other Items trigger the animation to make room for the draggable 
 Item,GridView reordering after release your finger，Now I have added "Delete Animation"; some people may only need  the delete animation, some people only need the drag
  animation, and some people need it all. We can control the function by properties.
+Please do not update the added data or deleted data while dragging
 
 HomePage：[https://github.com/baoolong/DragableGridview](https://github.com/baoolong/DragableGridview)
 
@@ -19,7 +21,7 @@ MoreWidght：[https://github.com/OpenFlutter/PullToRefresh](https://github.com/O
 Add this to your package's pubspec.yaml file:
 
 	dependencies:
-	  dragablegridview_flutter: ^0.1.7
+	  dragablegridview_flutter: ^0.1.8
 	  
 Add it to your dart file:
 
