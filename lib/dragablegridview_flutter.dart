@@ -26,7 +26,7 @@ class DragAbleGridView <T extends DragAbleGridViewBin> extends StatefulWidget{
   final int animationDuration;
   final int longPressDuration;
   ///删除按钮
-  final Image deleteIcon;
+  final Widget deleteIcon;
 
 
   DragAbleGridView({
