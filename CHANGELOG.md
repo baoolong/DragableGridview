@@ -1,3 +1,7 @@
+## [0.1.9] - 2019.04.24
+
+*    Update deleteIcon from Image to Widget
+
 ## [0.1.8] - 2019.04.23
 
 *    Fix bug
