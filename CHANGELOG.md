@@ -1,3 +1,7 @@
+## [0.2.0] - 2019.04.25
+
+*    Repair adsorption effect
+
 ## [0.1.9] - 2019.04.24
 
 *    Update deleteIcon from Image to Widget
