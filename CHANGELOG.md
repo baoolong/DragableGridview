@@ -1,3 +1,7 @@
+## [0.2.1] - 2019.05.24
+
+*    Fix some problems that Android 9.0 and above can't use
+
 ## [0.2.0] - 2019.04.25
 
 *    Repair adsorption effect
