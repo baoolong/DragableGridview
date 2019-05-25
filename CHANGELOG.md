@@ -1,3 +1,7 @@
+## [0.2.2] - 2019.05.25
+
+*    Fix the stuck when dragging
+
 ## [0.2.1] - 2019.05.24
 
 *    Fix some problems that Android 9.0 and above can't use
