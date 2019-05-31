@@ -1,3 +1,7 @@
+## [0.2.3] - 2019.05.31
+
+*    Fix a bug when deleteIcon is null
+
 ## [0.2.2] - 2019.05.25
 
 *    Fix the stuck when dragging

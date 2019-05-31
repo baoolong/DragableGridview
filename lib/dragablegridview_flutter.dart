@@ -250,13 +250,7 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
                 new Offstage(
                   offstage: isHideDeleteIcon,
                   child: new GestureDetector(
-                    child: new Builder(builder: (BuildContext context){
-                      if(widget.deleteIcon!=null){
-                        return widget.deleteIcon;
-                      }else{
-                        return new Container();
-                      }
-                    }),
+                    child: widget.deleteIcon ?? Container(height: 0, width: 0),
                     onTap: () {
                       setState(() {
                         widget.itemBins[index].offstage=true;
