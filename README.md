@@ -23,7 +23,7 @@ MoreWidght：[https://github.com/OpenFlutter/PullToRefresh](https://github.com/O
 Add this to your package's pubspec.yaml file:
 
 	dependencies:
-	  dragablegridview_flutter: ^0.2.3
+	  dragablegridview_flutter: ^0.2.5
 	  
 Add it to your dart file:
 

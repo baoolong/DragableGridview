@@ -1,3 +1,7 @@
+## [0.2.5] - 2019.05.31
+
+*    add deleteIcon click listener
+
 ## [0.2.3] - 2019.05.31
 
 *    Fix a bug when deleteIcon is null
