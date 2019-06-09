@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 typedef CreateChild = Widget Function(int position);
 typedef EditChangeListener();
+typedef DeleteIconClickListener =void Function(int index);
 
 ///准备修改的大纲：3.要适配2-3个文字
 class DragAbleGridView <T extends DragAbleGridViewBin> extends StatefulWidget{
@@ -27,6 +28,7 @@ class DragAbleGridView <T extends DragAbleGridViewBin> extends StatefulWidget{
   final int longPressDuration;
   ///删除按钮
   final Widget deleteIcon;
+  final DeleteIconClickListener deleteIconClickListener;
 
 
   DragAbleGridView({
@@ -42,6 +44,7 @@ class DragAbleGridView <T extends DragAbleGridViewBin> extends StatefulWidget{
     this.animationDuration:300,
     this.longPressDuration:800,
     this.deleteIcon,
+    this.deleteIconClickListener,
   }) :assert(
   child!=null,
   itemBins!=null,
@@ -252,6 +255,7 @@ class  DragAbleGridViewState <T extends DragAbleGridViewBin> extends State<DragA
                   child: new GestureDetector(
                     child: widget.deleteIcon ?? Container(height: 0, width: 0),
                     onTap: () {
+                      widget.deleteIconClickListener(index);
                       setState(() {
                         widget.itemBins[index].offstage=true;
                       });
